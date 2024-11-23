@@ -1,8 +1,10 @@
 import streamlit as st
 import pandas as pd
 import io
+from openpyxl import load_workbook
+from openpyxl.utils.dataframe import dataframe_to_rows
 
-# Función para procesar el archivo Excel y generar la tabla dinámica con la columna de Total General
+# Función para procesar el archivo Excel y generar la tabla dinámica con filtros automáticos
 def generar_tabla_dinamica_con_filtros(df):
     # Limpiar los nombres de las columnas
     df.columns = df.columns.str.strip()
@@ -38,6 +40,19 @@ def generar_tabla_dinamica_con_filtros(df):
 
     return tabla_dinamica
 
+# Función para guardar la tabla dinámica en un archivo Excel
+def guardar_excel_con_tabla_dinamica(df, tabla_dinamica):
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        # Escribir datos originales en la hoja "Hoja"
+        df.to_excel(writer, sheet_name="Hoja", index=False)
+
+        # Escribir la tabla dinámica en la hoja "Tabla_Dinamica"
+        tabla_dinamica.to_excel(writer, sheet_name="Tabla_Dinamica")
+
+    output.seek(0)
+    return output
+
 # Interfaz de usuario con Streamlit
 st.title('Generador de Tabla Dinámica con Filtros Automáticos y Total General')
 
@@ -46,39 +61,32 @@ uploaded_file = st.file_uploader("Sube un archivo Excel (.xls o .xlsx)", type=["
 
 if uploaded_file:
     try:
-        # Leer el archivo Excel, tomando la hoja "Hoja"
+        # Leer el archivo Excel, saltando las primeras 12 filas para los primeros datos
         df = pd.read_excel(uploaded_file, sheet_name="Hoja", skiprows=12)  # Saltar las primeras 12 filas
 
-        # Mostrar los primeros registros
-        st.write("Datos cargados de la hoja 'Hoja':")
-        st.write(df.head())
+        # Mostrar los primeros registros (de la fila 2 hasta la 12)
+        df_preliminar = pd.read_excel(uploaded_file, sheet_name="Hoja", skiprows=1, nrows=11)  # Fila 2 hasta la 12
+        st.write("Datos cargados de la hoja 'Hoja' (filas 2 a 12):")
+        st.write(df_preliminar)
 
         # Procesar y generar la tabla dinámica
         if st.button('Generar Tabla Dinámica'):
             tabla_dinamica = generar_tabla_dinamica_con_filtros(df)
-
             if tabla_dinamica is not None:
-                # Crear un archivo Excel en memoria con dos hojas
-                output = io.BytesIO()
-                with pd.ExcelWriter(output, engine='openpyxl') as writer:
-                    # Escribir datos originales en Hoja
-                    df.to_excel(writer, sheet_name="Hoja", index=False)
+                # Mostrar la tabla dinámica de forma interactiva
+                st.write("Visualiza la tabla dinámica:")
+                st.dataframe(tabla_dinamica)
 
-                    # Escribir la tabla dinámica en Hoja2
-                    tabla_dinamica.to_excel(writer, sheet_name="Hoja2")
+                # Crear un archivo Excel en memoria con la tabla dinámica
+                archivo_excel = guardar_excel_con_tabla_dinamica(df, tabla_dinamica)
 
-                output.seek(0)
-
-                # Descargar el archivo con la tabla dinámica filtrada en Hoja2
+                # Colocar el botón de descarga debajo de la tabla dinámica
                 st.download_button(
-                    label="Descargar Excel con Tabla Dinámica Filtrada en Hoja2",
-                    data=output,
+                    label="Descargar Excel con Tabla Dinámica Filtrada",
+                    data=archivo_excel,
                     file_name="tabla_dinamica_filtrada.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
 
-                # Mostrar la tabla dinámica de forma interactiva
-                st.write("Visualiza la tabla dinámica (Hoja2):")
-                st.dataframe(tabla_dinamica)
     except Exception as e:
         st.error(f"Error al procesar el archivo: {e}")
