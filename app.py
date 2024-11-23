@@ -41,7 +41,7 @@ def generar_tabla_dinamica_con_filtros(df):
     return tabla_dinamica
 
 # Función para guardar la tabla dinámica en un archivo Excel
-def guardar_excel_con_tabla_dinamica(df, tabla_dinamica):
+def guardar_excel_con_tabla_dinamica(df, tabla_dinamica, file_name):
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         # Escribir datos originales en la hoja "Hoja"
@@ -61,11 +61,14 @@ uploaded_file = st.file_uploader("Sube un archivo Excel (.xls o .xlsx)", type=["
 
 if uploaded_file:
     try:
+        # Obtener el nombre del archivo subido
+        nombre_archivo = uploaded_file.name
+
         # Leer el archivo Excel, saltando las primeras 12 filas para los primeros datos
         df = pd.read_excel(uploaded_file, sheet_name="Hoja", skiprows=12)  # Saltar las primeras 12 filas
 
         # Mostrar los primeros registros (de la fila 2 hasta la 12)
-        df_preliminar = pd.read_excel(uploaded_file, sheet_name="Hoja", skiprows=1, nrows=11)  # Fila 2 hasta la 12
+        df_preliminar = pd.read_excel(uploaded_file, sheet_name="Hoja", skiprows=1, nrows=10)  # Fila 2 hasta la 12
         st.write("Datos cargados de la hoja 'Hoja' (filas 2 a 12):")
         st.write(df_preliminar)
 
@@ -78,13 +81,13 @@ if uploaded_file:
                 st.dataframe(tabla_dinamica)
 
                 # Crear un archivo Excel en memoria con la tabla dinámica
-                archivo_excel = guardar_excel_con_tabla_dinamica(df, tabla_dinamica)
+                archivo_excel = guardar_excel_con_tabla_dinamica(df, tabla_dinamica, nombre_archivo)
 
                 # Colocar el botón de descarga debajo de la tabla dinámica
                 st.download_button(
                     label="Descargar Excel con Tabla Dinámica Filtrada",
                     data=archivo_excel,
-                    file_name="tabla_dinamica_filtrada.xlsx",
+                    file_name=f"tabla_dinamica_{nombre_archivo}",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
 
