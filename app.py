@@ -1,12 +1,11 @@
 import streamlit as st
 import pandas as pd
 import io
-from openpyxl import load_workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 
 # Función para procesar el archivo Excel y generar la tabla dinámica con filtros automáticos
 def generar_tabla_dinamica_con_filtros(df):
-    # Limpiar los nombres de las columnas
+    # elimina espacios en blanco al principio y al final de los nombres de las columnas
     df.columns = df.columns.str.strip()
 
     # Verificar que las columnas necesarias existen en el DataFrame
@@ -54,7 +53,7 @@ def guardar_excel_con_tabla_dinamica(df, tabla_dinamica, file_name):
     return output
 
 # Interfaz de usuario con Streamlit
-st.title('Generador de Tabla Dinámica con Filtros Automáticos y Total General')
+st.title('Generador de Tabla Dinámica con Filtros Automáticos')
 
 # Cargar archivo Excel
 uploaded_file = st.file_uploader("Sube un archivo Excel (.xls o .xlsx)", type=["xls", "xlsx"])
@@ -69,7 +68,7 @@ if uploaded_file:
 
         # Mostrar los primeros registros (de la fila 2 hasta la 12)
         df_preliminar = pd.read_excel(uploaded_file, sheet_name="Hoja", skiprows=1, nrows=10)  # Fila 2 hasta la 12
-        st.write("Datos cargados de la hoja 'Hoja' (filas 2 a 12):")
+        st.write("Datos cargados de la hoja:"(uploaded_file.name))
         st.write(df_preliminar)
 
         # Procesar y generar la tabla dinámica
@@ -85,7 +84,7 @@ if uploaded_file:
 
                 # Colocar el botón de descarga debajo de la tabla dinámica
                 st.download_button(
-                    label="Descargar Excel con Tabla Dinámica Filtrada",
+                    label="Descargar Excel",
                     data=archivo_excel,
                     file_name=f"tabla_dinamica_{nombre_archivo}",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
