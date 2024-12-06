@@ -68,7 +68,7 @@ if uploaded_file:
 
         # Mostrar los primeros registros (de la fila 2 hasta la 12)
         df_preliminar = pd.read_excel(uploaded_file, sheet_name="Hoja", skiprows=1, nrows=10)  # Fila 2 hasta la 12
-        st.write("Datos cargados de la hoja:"(uploaded_file.name))
+        st.write("Datos cargados de la hoja Excel:")
         st.write(df_preliminar)
 
         # Procesar y generar la tabla dinámica
